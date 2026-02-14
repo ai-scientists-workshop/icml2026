@@ -255,6 +255,22 @@ footer a:hover { color: var(--accent); }
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
 .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+/* ---- HERO ASCII ---- */
+.hero-ascii-wrap {
+  position: relative; z-index: 1;
+  max-width: 672px; width: 100%;
+  margin: 0 auto 3rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(110,231,183,0.03);
+}
+#hero-ascii {
+  display: block;
+  width: 100%;
+  aspect-ratio: 672 / 252;
+}
 </style>
 </head>
 <body>
@@ -278,6 +294,9 @@ footer a:hover { color: var(--accent); }
   <div class="hero-badge">ICML 2026 Workshop</div>
   <h1>From Pipeline Orchestrators to <em>World Modelers</em></h1>
   <p class="hero-sub">AI Scientists That Construct, Simulate, and Revise Mechanistic Models of the World</p>
+  <div class="hero-ascii-wrap">
+    <canvas id="hero-ascii"></canvas>
+  </div>
   <div class="hero-meta">
     <div class="hero-meta-item"><strong>Where</strong>&ensp;ICML 2026</div>
     <div class="hero-meta-item"><strong>Format</strong>&ensp;Full-day, in-person</div>
@@ -396,7 +415,7 @@ footer a:hover { color: var(--accent); }
       <div class="speaker-card">
         <div class="speaker-name">Maria Brbić</div>
         <div class="speaker-affil">EPFL</div>
-        <div class="speaker-desc">Foundation models for single-cell biology.</div>
+        <div class="speaker-desc">ML methods for real-world biomedical research.</div>
         <div class="speaker-tag">confirmed</div>
       </div>
       <div class="speaker-card">
@@ -537,7 +556,7 @@ footer a:hover { color: var(--accent); }
 
 <!-- FOOTER -->
 <footer>
-  <p>World Modelers @ ICML 2026 · <a href="mailto:cesar.valdez@mila.quebec">cesar.valdez@mila.quebec</a></p>
+  <p>AIScientists @ ICML 2026 · <a href="mailto:cesar.valdez@mila.quebec">cesar.valdez@mila.quebec</a></p>
   <p style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">Built with care at Mila, Yale, Imperial, Oxford & beyond</p>
 </footer>
 
@@ -568,6 +587,253 @@ window.addEventListener('scroll', () => {
     a.classList.toggle('active', a.getAttribute('href') === '#' + current);
   });
 });
+</script>
+
+<!-- HERO ASCII ANIMATION -->
+<script>
+(function() {
+  const canvas = document.getElementById('hero-ascii');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const COLS = 56, ROWS = 14, CW = 12, CH = 18;
+  const W = COLS * CW, H = ROWS * CH;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.scale(dpr, dpr);
+
+  const COL = {
+    dot: '#1a1a2e', unknown: '#3a3a55', agent: '#6ee7b7',
+    reveal: '#34d399', conn: '#fbbf24', fail: '#ef4444',
+    dim: '#444460', label: '#8888a0'
+  };
+
+  // Sparse background dots
+  const bgDots = [];
+  for (let y = 0; y < ROWS; y++)
+    for (let x = 0; x < COLS; x++)
+      if (Math.random() < 0.08) bgDots.push({x, y, p: Math.random() * 6.28});
+
+  // Three structures the agent will discover
+  const clusters = [
+    { // Square molecule
+      cx:14, cy:7,
+      nodes:[{dx:-1,dy:-1,c:'◎'},{dx:1,dy:-1,c:'∿'},{dx:-1,dy:1,c:'△'},{dx:1,dy:1,c:'⬡'}],
+      edges:[{dx:0,dy:-1,c:'─'},{dx:0,dy:1,c:'─'},{dx:-1,dy:0,c:'│'},{dx:1,dy:0,c:'│'}],
+      bad:{dx:0,dy:0,c:'╳'}, state:'hidden', t:0
+    },
+    { // Linear chain
+      cx:30, cy:7,
+      nodes:[{dx:-3,dy:0,c:'∿'},{dx:-1,dy:0,c:'◯'},{dx:1,dy:0,c:'◎'},{dx:3,dy:0,c:'△'}],
+      edges:[{dx:-2,dy:0,c:'─'},{dx:0,dy:0,c:'─'},{dx:2,dy:0,c:'─'}],
+      bad:{dx:0,dy:1,c:'│'}, state:'hidden', t:0
+    },
+    { // Cross network
+      cx:46, cy:7,
+      nodes:[{dx:0,dy:-2,c:'◉'},{dx:-2,dy:0,c:'◎'},{dx:2,dy:0,c:'△'},{dx:0,dy:2,c:'⬡'}],
+      edges:[{dx:0,dy:-1,c:'│'},{dx:-1,dy:0,c:'─'},{dx:1,dy:0,c:'─'},{dx:0,dy:1,c:'│'},{dx:0,dy:0,c:'┼'}],
+      bad:{dx:1,dy:-1,c:'╲'}, state:'hidden', t:0
+    }
+  ];
+
+  let ax = 3, ay = 7, sx = 3, sy = 7;
+  let frame = 0, pi = 0, pf = 0;
+
+  // Animation timeline: move → perceive → model → commit, repeat for each cluster
+  const TL = [
+    {type:'move', tx:11, ty:7, dur:70},
+    {type:'perceive', ci:0, dur:55},
+    {type:'model', ci:0, dur:150},
+    {type:'commit', ci:0, dur:45},
+    {type:'move', tx:27, ty:7, dur:70},
+    {type:'perceive', ci:1, dur:55},
+    {type:'model', ci:1, dur:150},
+    {type:'commit', ci:1, dur:45},
+    {type:'move', tx:43, ty:7, dur:70},
+    {type:'perceive', ci:2, dur:55},
+    {type:'model', ci:2, dur:150},
+    {type:'commit', ci:2, dur:45},
+    {type:'pause', dur:90},
+  ];
+
+  function ease(t) { return t < .5 ? 2*t*t : 1 - (-2*t+2)**2 / 2; }
+
+  function draw(x, y, ch, col, a) {
+    ctx.globalAlpha = a === undefined ? 1 : a;
+    ctx.fillStyle = col;
+    ctx.fillText(ch, x * CW + CW/2, y * CH + CH/2);
+  }
+
+  function tick() {
+    const ph = TL[pi];
+    const t = Math.min(pf / ph.dur, 1);
+
+    if (ph.type === 'move') {
+      ax = sx + (ph.tx - sx) * ease(t);
+      ay = sy + (ph.ty - sy) * ease(t);
+    } else if (ph.type !== 'pause') {
+      const cl = clusters[ph.ci];
+      cl.state = ph.type === 'commit' ? 'committing' : ph.type === 'perceive' ? 'perceiving' : 'modeling';
+      cl.t = t;
+    }
+
+    pf++;
+    if (pf >= ph.dur) {
+      if (ph.type === 'move') { ax = ph.tx; ay = ph.ty; }
+      if (ph.type === 'commit') clusters[ph.ci].state = 'done';
+      pi++; pf = 0; sx = ax; sy = ay;
+      if (pi >= TL.length) {
+        pi = 0; ax = 3; ay = 7; sx = 3; sy = 7;
+        clusters.forEach(c => { c.state = 'hidden'; c.t = 0; });
+      }
+    }
+  }
+
+  function paint() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.font = '12px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Background dots (subtle pulse)
+    bgDots.forEach(d => {
+      draw(d.x, d.y, '·', COL.dot, .2 + Math.sin(frame * .012 + d.p) * .08);
+    });
+
+    // Agent glow (radial)
+    const gx = ax * CW + CW/2, gy = ay * CH + CH/2;
+    const gr = ctx.createRadialGradient(gx, gy, 0, gx, gy, 55);
+    gr.addColorStop(0, 'rgba(110,231,183,0.10)');
+    gr.addColorStop(1, 'rgba(110,231,183,0)');
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = gr;
+    ctx.beginPath();
+    ctx.arc(gx, gy, 55, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Render each cluster based on its state
+    clusters.forEach(cl => {
+      const {cx, cy, nodes, edges, bad, state, t} = cl;
+
+      if (state === 'hidden') {
+        // Jittering ?s appear as agent gets close
+        nodes.forEach(n => {
+          const d = Math.hypot(ax - (cx + n.dx), ay - (cy + n.dy));
+          if (d < 6) {
+            const jx = Math.sin(frame * .1 + n.dx * 3) * .15;
+            const jy = Math.cos(frame * .13 + n.dy * 3) * .15;
+            draw(cx + n.dx + jx, cy + n.dy + jy, '?', COL.unknown, Math.max(0, 1 - d/6) * .5);
+          }
+        });
+      }
+      else if (state === 'perceiving') {
+        // ? fades out, real symbol fades in (staggered per node)
+        nodes.forEach((n, i) => {
+          const delay = i / nodes.length * .4;
+          const p = Math.max(0, Math.min(1, (t - delay) / .5));
+          if (p < .5) draw(cx + n.dx, cy + n.dy, '?', COL.unknown, 1 - p * 2);
+          if (p > 0) draw(cx + n.dx, cy + n.dy, n.c, COL.reveal, Math.min(p * 2, 1));
+        });
+      }
+      else if (state === 'modeling') {
+        // Phase breakdown: build(.0-.2) → fail(.2-.32) → pause/readjust(.32-.55) → rebuild(.55-1)
+
+        if (t < .2) {
+          // Attempt 1: wrong connection + partial edges build up
+          nodes.forEach(n => draw(cx + n.dx, cy + n.dy, n.c, COL.reveal));
+          const a1 = t / .2;
+          draw(cx + bad.dx, cy + bad.dy, bad.c, COL.conn, a1);
+          edges.slice(0, Math.ceil(edges.length / 2)).forEach((e, i) => {
+            const p = Math.max(0, (a1 - i * .25) / .5);
+            if (p > 0) draw(cx + e.dx, cy + e.dy, e.c, COL.conn, Math.min(p, 1));
+          });
+        }
+        else if (t < .32) {
+          // Failure — everything flashes red, ✗ holds prominently
+          const f = (t - .2) / .12;
+          // Nodes flash red briefly then return
+          const nodeCol = f < .4 ? COL.fail : COL.reveal;
+          const nodeA = f < .4 ? 1 : (.6 + Math.sin(f * 8) * .2);
+          nodes.forEach(n => draw(cx + n.dx, cy + n.dy, n.c, nodeCol, nodeA));
+          // Wrong edge: ✗ stays bright red
+          draw(cx + bad.dx, cy + bad.dy, '✗', COL.fail, Math.max(.3, 1 - f * .5));
+          // Partial edges turn red and fade
+          edges.slice(0, Math.ceil(edges.length / 2)).forEach(e => {
+            draw(cx + e.dx, cy + e.dy, e.c, COL.fail, Math.max(0, .8 - f));
+          });
+        }
+        else if (t < .55) {
+          // Re-adjusting priors — agent pauses, nodes flicker as it reconsiders
+          const r = (t - .32) / .23;
+          nodes.forEach((n, i) => {
+            // Nodes flicker: dim → bright → dim, staggered
+            const flicker = .35 + Math.sin(frame * .15 + i * 2.1) * .25;
+            const col = r < .3 ? COL.unknown : COL.reveal;
+            draw(cx + n.dx, cy + n.dy, n.c, col, flicker);
+          });
+        }
+        else {
+          // Attempt 2: correct connections draw in sequentially
+          nodes.forEach(n => draw(cx + n.dx, cy + n.dy, n.c, COL.reveal));
+          const a2 = (t - .55) / .45;
+          edges.forEach((e, i) => {
+            const delay = i / edges.length * .5;
+            const p = Math.max(0, Math.min(1, (a2 - delay) / .35));
+            if (p > 0) draw(cx + e.dx, cy + e.dy, e.c, COL.conn, p);
+          });
+        }
+      }
+      else if (state === 'committing') {
+        // Pulse bright then settle into memory
+        const glow = t < .3 ? 1 : Math.max(.45, 1 - (t - .3) * .8);
+        const col = t < .6 ? COL.agent : COL.dim;
+        nodes.forEach(n => draw(cx + n.dx, cy + n.dy, n.c, col, glow));
+        edges.forEach(e => draw(cx + e.dx, cy + e.dy, e.c, col, glow * .8));
+        if (t > .35) {
+          const checkY = nodes.some(n => n.dy === 2) ? 4 : 3;
+          draw(cx, cy + checkY, '✓', COL.agent, Math.min(1, (t - .35) / .25));
+        }
+      }
+      else if (state === 'done') {
+        // Committed to memory — dim but persistent
+        nodes.forEach(n => draw(cx + n.dx, cy + n.dy, n.c, COL.dim, .45));
+        edges.forEach(e => draw(cx + e.dx, cy + e.dy, e.c, COL.dim, .35));
+        const checkY = nodes.some(n => n.dy === 2) ? 4 : 3;
+        draw(cx, cy + checkY, '✓', COL.dim, .35);
+      }
+    });
+
+    // Agent character (breathing pulse)
+    const pulse = .85 + Math.sin(frame * .06) * .15;
+    draw(Math.round(ax), Math.round(ay), '@', COL.agent, pulse);
+
+    // Phase label floating above agent
+    const ph = TL[pi];
+    if (ph && (ph.type === 'perceive' || ph.type === 'model' || ph.type === 'commit')) {
+      const t = Math.min(pf / ph.dur, 1);
+      let label, labelCol;
+      if (ph.type === 'model' && t >= .2 && t < .32) {
+        label = '✗ failed'; labelCol = COL.fail;
+      } else if (ph.type === 'model' && t >= .32 && t < .55) {
+        label = 're-adjusting...'; labelCol = COL.unknown;
+      } else {
+        label = {perceive:'perceiving...', model:'modeling...', commit:'committed ✓'}[ph.type];
+        labelCol = COL.label;
+      }
+      ctx.globalAlpha = Math.min(.7, pf / 15 * .7);
+      ctx.fillStyle = labelCol;
+      ctx.font = '9px "JetBrains Mono", monospace';
+      ctx.fillText(label, Math.round(ax) * CW + CW/2, (Math.round(ay) - 2) * CH + CH/2);
+      ctx.globalAlpha = 1;
+    }
+
+    frame++;
+  }
+
+  function loop() { tick(); paint(); requestAnimationFrame(loop); }
+  document.fonts.ready.then(loop);
+})();
 </script>
 
 </body>
