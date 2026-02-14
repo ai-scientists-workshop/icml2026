@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Modelers @ ICML 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-surface: #111118;
+  --bg-card: #16161f;
+  --bg-hover: #1c1c28;
+  --border: #2a2a3a;
+  --text: #e8e8f0;
+  --text-dim: #8888a0;
+  --text-muted: #555568;
+  --accent: #6ee7b7;
+  --accent-dim: #34d399;
+  --accent-glow: rgba(110, 231, 183, 0.08);
+  --warm: #fbbf24;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--accent); color: var(--bg); }
+
+/* ---- NAV ---- */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  transition: all 0.3s;
+}
+.nav-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 60px;
+}
+.nav-logo {
+  font-family: var(--mono); font-size: 0.85rem; font-weight: 500;
+  color: var(--accent); letter-spacing: 0.02em;
+  text-decoration: none;
+}
+.nav-logo span { color: var(--text-dim); }
+.nav-links { display: flex; gap: 0; }
+.nav-links a {
+  color: var(--text-dim); text-decoration: none;
+  font-size: 0.82rem; font-weight: 500; letter-spacing: 0.03em;
+  padding: 0.5rem 1rem; border-radius: 6px;
+  transition: all 0.2s;
+}
+.nav-links a:hover, .nav-links a.active {
+  color: var(--text); background: var(--accent-glow);
+}
+
+/* ---- HERO ---- */
+.hero {
+  min-height: 100vh; display: flex; flex-direction: column;
+  justify-content: center; align-items: center; text-align: center;
+  padding: 8rem 2rem 4rem;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 50% 30%, rgba(110,231,183,0.04) 0%, transparent 50%),
+              radial-gradient(ellipse at 30% 70%, rgba(251,191,36,0.02) 0%, transparent 40%);
+  animation: drift 20s ease-in-out infinite alternate;
+}
+@keyframes drift {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(-3%, 2%) rotate(1deg); }
+}
+.hero-badge {
+  position: relative; z-index: 1;
+  font-family: var(--mono); font-size: 0.75rem;
+  color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase;
+  border: 1px solid rgba(110,231,183,0.25); padding: 0.4rem 1.2rem;
+  border-radius: 100px; margin-bottom: 2.5rem;
+  background: rgba(110,231,183,0.04);
+}
+.hero h1 {
+  position: relative; z-index: 1;
+  font-family: var(--serif); font-size: clamp(2.5rem, 6vw, 4.2rem);
+  font-weight: 400; line-height: 1.15; max-width: 800px;
+  margin-bottom: 1.5rem;
+}
+.hero h1 em { font-style: italic; color: var(--accent); }
+.hero-sub {
+  position: relative; z-index: 1;
+  font-size: 1.1rem; color: var(--text-dim);
+  max-width: 600px; margin-bottom: 3rem;
+}
+.hero-meta {
+  position: relative; z-index: 1;
+  display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center;
+}
+.hero-meta-item {
+  font-family: var(--mono); font-size: 0.78rem;
+  color: var(--text-muted); letter-spacing: 0.04em;
+}
+.hero-meta-item strong { color: var(--text-dim); font-weight: 500; }
+
+/* ---- SECTIONS ---- */
+section { padding: 5rem 2rem; }
+.container { max-width: 900px; margin: 0 auto; }
+
+.section-label {
+  font-family: var(--mono); font-size: 0.72rem;
+  color: var(--accent); letter-spacing: 0.18em; text-transform: uppercase;
+  margin-bottom: 0.8rem;
+}
+.section-title {
+  font-family: var(--serif); font-size: 2rem;
+  font-weight: 400; margin-bottom: 1rem;
+}
+.section-title em { font-style: italic; color: var(--accent); }
+.section-desc {
+  color: var(--text-dim); max-width: 680px;
+  font-size: 0.95rem; margin-bottom: 2.5rem; line-height: 1.7;
+}
+
+/* ---- ABOUT ---- */
+#about { border-top: 1px solid var(--border); }
+.about-text { color: var(--text-dim); font-size: 0.95rem; line-height: 1.75; margin-bottom: 1.2rem; }
+.about-text strong { color: var(--text); font-weight: 500; }
+.topics-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.8rem; margin-top: 2rem;
+}
+.topic-chip {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.8rem 1.1rem;
+  font-size: 0.85rem; color: var(--text-dim);
+  transition: all 0.2s;
+}
+.topic-chip:hover { border-color: var(--accent); color: var(--text); background: var(--accent-glow); }
+
+/* ---- SCHEDULE ---- */
+#schedule { background: var(--bg-surface); border-top: 1px solid var(--border); }
+.schedule-item {
+  display: grid; grid-template-columns: 140px 1fr;
+  gap: 1.5rem; padding: 1rem 0;
+  border-bottom: 1px solid rgba(42,42,58,0.5);
+  transition: all 0.2s;
+}
+.schedule-item:hover { background: var(--accent-glow); margin: 0 -1rem; padding: 1rem; border-radius: 8px; }
+.schedule-time {
+  font-family: var(--mono); font-size: 0.82rem;
+  color: var(--accent-dim); white-space: nowrap; padding-top: 0.15rem;
+}
+.schedule-content h4 { font-size: 0.95rem; font-weight: 500; margin-bottom: 0.15rem; }
+.schedule-content p { font-size: 0.82rem; color: var(--text-dim); }
+.schedule-break { opacity: 0.5; }
+.schedule-break .schedule-content h4 { font-weight: 400; color: var(--text-muted); font-style: italic; }
+
+/* ---- SPEAKERS ---- */
+#speakers { border-top: 1px solid var(--border); }
+.speakers-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+.speaker-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.4rem;
+  transition: all 0.25s;
+}
+.speaker-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+.speaker-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.15rem; }
+.speaker-affil { font-size: 0.8rem; color: var(--accent-dim); margin-bottom: 0.5rem; }
+.speaker-desc { font-size: 0.8rem; color: var(--text-dim); line-height: 1.55; }
+.speaker-tag {
+  display: inline-block; font-family: var(--mono); font-size: 0.65rem;
+  color: var(--text-muted); border: 1px solid var(--border);
+  padding: 0.15rem 0.5rem; border-radius: 4px; margin-top: 0.6rem;
+  letter-spacing: 0.04em;
+}
+
+/* ---- CFP ---- */
+#cfp { background: var(--bg-surface); border-top: 1px solid var(--border); }
+.cfp-tracks { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.track-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem;
+  transition: all 0.25s;
+}
+.track-card:hover { border-color: var(--accent); }
+.track-card h4 { font-family: var(--serif); font-size: 1.1rem; margin-bottom: 0.5rem; }
+.track-card .pages { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); margin-bottom: 0.6rem; }
+.track-card p { font-size: 0.85rem; color: var(--text-dim); line-height: 1.6; }
+.cfp-details { color: var(--text-dim); font-size: 0.9rem; line-height: 1.7; }
+.cfp-details strong { color: var(--text); }
+
+.date-row {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0.8rem 0; border-bottom: 1px solid rgba(42,42,58,0.4);
+}
+.date-label { font-size: 0.85rem; color: var(--text-dim); min-width: 200px; }
+.date-value { font-family: var(--mono); font-size: 0.85rem; color: var(--warm); }
+
+/* ---- ORGANIZERS ---- */
+#organizers { border-top: 1px solid var(--border); }
+.org-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+.org-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.2rem;
+  transition: all 0.25s;
+}
+.org-card:hover { border-color: rgba(110,231,183,0.3); }
+.org-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.1rem; }
+.org-affil { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 0.3rem; }
+.org-role { font-family: var(--mono); font-size: 0.65rem; color: var(--accent-dim); letter-spacing: 0.04em; }
+
+/* ---- FOOTER ---- */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 3rem 2rem; text-align: center;
+}
+footer p { font-size: 0.82rem; color: var(--text-muted); }
+footer a { color: var(--accent-dim); text-decoration: none; }
+footer a:hover { color: var(--accent); }
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 768px) {
+  .nav-links a { padding: 0.4rem 0.6rem; font-size: 0.75rem; }
+  .hero { padding: 7rem 1.5rem 3rem; }
+  .hero-meta { flex-direction: column; gap: 0.5rem; }
+  .schedule-item { grid-template-columns: 1fr; gap: 0.3rem; }
+  .speakers-grid, .org-grid { grid-template-columns: 1fr; }
+}
+
+/* ---- ANIMATIONS ---- */
+.fade-in {
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">WorldModelers<span>@ICML2026</span></a>
+    <div class="nav-links">
+      <a href="#about">About</a>
+      <a href="#schedule">Schedule</a>
+      <a href="#speakers">Speakers</a>
+      <a href="#cfp">Call for Papers</a>
+      <a href="#organizers">Organizers</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">ICML 2026 Workshop</div>
+  <h1>From Pipeline Orchestrators to <em>World Modelers</em></h1>
+  <p class="hero-sub">AI Scientists That Construct, Simulate, and Revise Mechanistic Models of the World</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><strong>Where</strong>&ensp;ICML 2026</div>
+    <div class="hero-meta-item"><strong>Format</strong>&ensp;Full-day, in-person</div>
+    <div class="hero-meta-item"><strong>Contact</strong>&ensp;cesar.valdez@mila.quebec</div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="section-label">01 — About</div>
+    <h2 class="section-title">Beyond pipeline orchestration: <em>constructing theories</em></h2>
+    <p class="about-text">
+      AI agents for scientific discovery are proliferating, but they share a fundamental limitation: they treat science as a <strong>pipeline-selection problem</strong>. Current AI scientists receive textual experiment descriptions, search the literature, and orchestrate pre-existing tools—reducing scientific reasoning to text matching.
+    </p>
+    <p class="about-text">
+      Yet science is the ability to <strong>construct a model</strong> from data, <strong>generate predictions</strong> from that model, and <strong>validate those predictions</strong> through experiments. This workshop asks: <strong>how do we build AI scientists that construct, simulate, and revise mechanistic models of the world?</strong>
+    </p>
+    <p class="about-text">
+      The next generation of AI scientists should infer generative models of complex systems—"virtual cells," "virtual brains," "virtual organisms"—whose behavior can be simulated, perturbed, and interrogated. These models encode explicit hypotheses about how components interact and evolve, forming a closed loop: <strong>model → prediction → experiment → revision</strong>.
+    </p>
+
+    <div class="topics-grid">
+      <div class="topic-chip">Generative models (neural ODEs/SDEs, flow matching)</div>
+      <div class="topic-chip">Virtual cells, brains & organisms</div>
+      <div class="topic-chip">Lab-in-the-loop experimental design</div>
+      <div class="topic-chip">Geometric & topological deep learning</div>
+      <div class="topic-chip">AI agents for model construction</div>
+      <div class="topic-chip">Cross-domain generalizability</div>
+      <div class="topic-chip">Evaluation & benchmarks for AI scientists</div>
+      <div class="topic-chip">Hypothesis generation & model falsification</div>
+      <div class="topic-chip">Language reasoning + geometric models</div>
+    </div>
+  </div>
+</section>
+
+<!-- SCHEDULE -->
+<section id="schedule">
+  <div class="container">
+    <div class="section-label">02 — Schedule</div>
+    <h2 class="section-title">Full-day <em>program</em></h2>
+    <p class="section-desc">All activities in person. Virtual talks accommodated for hard constraints. Talks recorded and shared online.</p>
+
+    <div class="schedule-item"><div class="schedule-time">08:00 – 08:10</div><div class="schedule-content"><h4>Opening Remarks</h4><p>From pipeline orchestrators to world modelers</p></div></div>
+    <div class="schedule-item"><div class="schedule-time">08:10 – 09:20</div><div class="schedule-content"><h4>2 Foundation Talks</h4><p>35 min each · Academic</p></div></div>
+    <div class="schedule-item schedule-break"><div class="schedule-time">09:20 – 09:35</div><div class="schedule-content"><h4>Coffee break & poster setup</h4></div></div>
+    <div class="schedule-item"><div class="schedule-time">09:35 – 10:05</div><div class="schedule-content"><h4>3 Contributed Spotlights</h4><p>10 min each</p></div></div>
+    <div class="schedule-item"><div class="schedule-time">10:05 – 11:15</div><div class="schedule-content"><h4>2 Invited Talks</h4><p>30 min each · Academic</p></div></div>
+    <div class="schedule-item"><div class="schedule-time">11:15 – 12:15</div><div class="schedule-content"><h4>Poster Session I</h4></div></div>
+    <div class="schedule-item schedule-break"><div class="schedule-time">12:15 – 13:15</div><div class="schedule-content"><h4>Lunch</h4></div></div>
+    <div class="schedule-item"><div class="schedule-time">13:15 – 14:15</div><div class="schedule-content"><h4>2 Invited Talks</h4><p>30 min each · Industry</p></div></div>
+    <div class="schedule-item"><div class="schedule-time">14:15 – 15:15</div><div class="schedule-content"><h4>2 Invited Talks</h4><p>30 min each · Industry</p></div></div>
+    <div class="schedule-item schedule-break"><div class="schedule-time">15:15 – 15:30</div><div class="schedule-content"><h4>Poster Session II & coffee break</h4></div></div>
+    <div class="schedule-item"><div class="schedule-time">15:30 – 16:10</div><div class="schedule-content"><h4>Panel Discussion</h4><p>How do we know an AI scientist has built a good model?</p></div></div>
+    <div class="schedule-item"><div class="schedule-time">16:10 – 16:40</div><div class="schedule-content"><h4>3 Contributed Spotlights</h4><p>10 min each</p></div></div>
+    <div class="schedule-item"><div class="schedule-time">16:40 – 17:00</div><div class="schedule-content"><h4>Open Discussion & Closing</h4></div></div>
+  </div>
+</section>
+
+<!-- SPEAKERS -->
+<section id="speakers">
+  <div class="container">
+    <div class="section-label">03 — Speakers</div>
+    <h2 class="section-title">Invited <em>speakers</em></h2>
+    <p class="section-desc">All confirmed speakers will present in person unless otherwise stated.</p>
+
+    <div class="speakers-grid">
+      <div class="speaker-card">
+        <div class="speaker-name">Charlotte Bunne</div>
+        <div class="speaker-affil">EPFL</div>
+        <div class="speaker-desc">AI in molecular medicine.</div>
+        <div class="speaker-tag">confirmed</div>
+      </div>
+      <div class="speaker-card">
+        <div class="speaker-name">Christian Ledig</div>
+        <div class="speaker-affil">University of Bamberg</div>
+        <div class="speaker-desc">Explainable ML for health.</div>
+        <div class="speaker-tag">confirmed</div>
+      </div>
+      <div class="speaker-card">
+        <div class="speaker-name">Eva Dyer</div>
+        <div class="speaker-affil">UPenn</div>
+        <div class="speaker-desc">NeuroML to uncover the computational principles behind intelligence.</div>
+        <div class="speaker-tag">confirmed</div>
+      </div>
+      <div class="speaker-card">
+        <div class="speaker-name">David van Dijk</div>
+        <div class="speaker-affil">Yale</div>
+        <div class="speaker-desc">ML for big biomedical data.</div>
+        <div class="speaker-tag">confirmed</div>
+      </div>
+      <div class="speaker-card">
+        <div class="speaker-name">Kirill Neklyudov</div>
+        <div class="speaker-affil">Mila / Anthropic</div>
+        <div class="speaker-desc">Generative ML to solve problems in natural sciences.</div>
+        <div class="speaker-tag">confirmed</div>
+      </div>
+      <div class="speaker-card">
+        <div class="speaker-name">Kexin Huang</div>
+        <div class="speaker-affil">Phylo / Stanford</div>
+        <div class="speaker-desc">AI and agentic systems for biologists.</div>
+        <div class="speaker-tag">confirmed</div>
+      </div>
+      <div class="speaker-card">
+        <div class="speaker-name">Jake Taylor-King</div>
+        <div class="speaker-affil">Relation Therapeutics</div>
+        <div class="speaker-desc">AI for drug development.</div>
+        <div class="speaker-tag">confirmed</div>
+      </div>
+      <div class="speaker-card">
+        <div class="speaker-name">Yutaro Yamada</div>
+        <div class="speaker-affil">Sakana AI</div>
+        <div class="speaker-desc">LLM agents and automated scientific discovery.</div>
+        <div class="speaker-tag">confirmed</div>
+      </div>
+      <div class="speaker-card">
+        <div class="speaker-name">Maria Brbić</div>
+        <div class="speaker-affil">EPFL</div>
+        <div class="speaker-desc">Foundation models for single-cell biology.</div>
+        <div class="speaker-tag">confirmed</div>
+      </div>
+      <div class="speaker-card">
+        <div class="speaker-name">Egbert Castro</div>
+        <div class="speaker-affil">Ascent Bio</div>
+        <div class="speaker-desc">Agentic intelligence for biology.</div>
+        <div class="speaker-tag">confirmed</div>
+      </div>
+      <div class="speaker-card">
+        <div class="speaker-name">Dhananjay Bhaskar</div>
+        <div class="speaker-affil">U Wisconsin-Madison</div>
+        <div class="speaker-desc">AI for scientific discovery in biology.</div>
+        <div class="speaker-tag">confirmed</div>
+      </div>
+      <div class="speaker-card">
+        <div class="speaker-name">Lazar Atanackovic</div>
+        <div class="speaker-affil">U of Alberta</div>
+        <div class="speaker-desc">ML for understanding and modelling natural systems.</div>
+        <div class="speaker-tag">confirmed</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CFP -->
+<section id="cfp">
+  <div class="container">
+    <div class="section-label">04 — Call for Papers</div>
+    <h2 class="section-title">Submit your <em>work</em></h2>
+    <p class="section-desc">We welcome contributions across all workshop topics. Submissions via OpenReview.</p>
+
+    <div class="cfp-tracks">
+      <div class="track-card">
+        <h4>Full Papers</h4>
+        <div class="pages">4–8 pages</div>
+        <p>Original research contributions with methods, experiments, and comparisons. Top papers selected for spotlight talks and awards.</p>
+      </div>
+      <div class="track-card">
+        <h4>Extended Abstracts</h4>
+        <div class="pages">4 pages</div>
+        <p>Work-in-progress results, preliminary findings, or position papers framing new directions.</p>
+      </div>
+      <div class="track-card">
+        <h4>Tiny Papers</h4>
+        <div class="pages">1–2 pages</div>
+        <p>Novel methodological ideas or approaches to biological problems. Designed to encourage participation from under-represented communities. Lack of results is not grounds for rejection.</p>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+      <div class="date-row">
+        <span class="date-label">Submission deadline</span>
+        <span class="date-value">TBA</span>
+      </div>
+      <div class="date-row">
+        <span class="date-label">Author notification</span>
+        <span class="date-value">TBA</span>
+      </div>
+      <div class="date-row">
+        <span class="date-label">Camera-ready deadline</span>
+        <span class="date-value">TBA</span>
+      </div>
+      <div class="date-row">
+        <span class="date-label">Workshop date</span>
+        <span class="date-value">TBA · ICML 2026</span>
+      </div>
+    </div>
+
+    <p class="cfp-details">
+      All submissions are <strong>non-archival</strong> and will be reviewed by the program committee. We expect ~100 submissions and will accommodate up to <strong>80 posters</strong>. The top-ranked full papers and best extended abstract will be selected for <strong>contributed spotlight talks</strong>. Full papers also compete for <strong>best paper awards</strong>.
+    </p>
+  </div>
+</section>
+
+<!-- ORGANIZERS -->
+<section id="organizers">
+  <div class="container">
+    <div class="section-label">05 — People</div>
+    <h2 class="section-title"><em>Organizers</em></h2>
+    <p class="section-desc">Our committee spans institutions across North America and Europe, multiple career stages, and diverse backgrounds.</p>
+
+    <div class="org-grid">
+      <div class="org-card">
+        <div class="org-name">César M. Valdez Córdova</div>
+        <div class="org-affil">Mila & McGill University</div>
+        <div class="org-role">Lead organizer</div>
+      </div>
+      <div class="org-card">
+        <div class="org-name">João Felipe Rocha</div>
+        <div class="org-affil">Yale University</div>
+        <div class="org-role">Co-organizer</div>
+      </div>
+      <div class="org-card">
+        <div class="org-name">Jungyoon Lee</div>
+        <div class="org-affil">Mila & U de Montréal</div>
+        <div class="org-role">Co-organizer</div>
+      </div>
+      <div class="org-card">
+        <div class="org-name">Joey Bose</div>
+        <div class="org-affil">Imperial College London</div>
+        <div class="org-role">Co-organizer</div>
+      </div>
+      <div class="org-card">
+        <div class="org-name">Heather Harrington</div>
+        <div class="org-affil">U of Oxford & MPI-CBG</div>
+        <div class="org-role">Co-organizer</div>
+      </div>
+      <div class="org-card">
+        <div class="org-name">Rex Ying</div>
+        <div class="org-affil">Yale University</div>
+        <div class="org-role">Co-organizer</div>
+      </div>
+      <div class="org-card">
+        <div class="org-name">Guy Wolf</div>
+        <div class="org-affil">Mila & U de Montréal</div>
+        <div class="org-role">Co-organizer</div>
+      </div>
+      <div class="org-card">
+        <div class="org-name">Smita Krishnaswamy</div>
+        <div class="org-affil">Yale University</div>
+        <div class="org-role">Co-organizer</div>
+      </div>
+    </div>
+
+    <h3 style="font-family: var(--serif); font-size: 1.3rem; margin-top: 3rem; margin-bottom: 1rem;">Steering Committee</h3>
+    <div class="org-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+      <div class="org-card">
+        <div class="org-name">Matthew Scicluna</div>
+        <div class="org-affil">Mila & U de Montréal</div>
+      </div>
+      <div class="org-card">
+        <div class="org-name">Aaron Wenteler</div>
+        <div class="org-affil">Queen Mary U of London</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>World Modelers @ ICML 2026 · <a href="mailto:cesar.valdez@mila.quebec">cesar.valdez@mila.quebec</a></p>
+  <p style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">Built with care at Mila, Yale, Imperial, Oxford & beyond</p>
+</footer>
+
+<!-- SCROLL ANIMATIONS -->
+<script>
+// Intersection Observer for fade-in
+document.querySelectorAll('.speaker-card, .track-card, .org-card, .topic-chip').forEach(el => {
+  el.classList.add('fade-in');
+});
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 40);
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// Active nav link
+const sections = document.querySelectorAll('section[id]');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(section => {
+    if (window.scrollY >= section.offsetTop - 200) current = section.id;
+  });
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+</script>
+
+</body>
+</html>
